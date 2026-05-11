@@ -16,7 +16,7 @@ pip install -r requirements.txt
 ## Environment
 
 Create a `.env` file in the project root with the required values:
-
+or just using this command: `cp .env.example .env` **Don't forget to change data in .env.example**
 ```
 mongo_username=admin
 mongo_password=change-me

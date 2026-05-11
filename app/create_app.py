@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import FastAPI
 
@@ -19,6 +20,10 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     """Создаёт и конфигурирует экземпляр FastAPI приложения."""
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    )
     app = FastAPI(lifespan=lifespan)
 
     setup_middlewares(app)
