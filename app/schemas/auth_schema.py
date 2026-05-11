@@ -9,6 +9,11 @@ class TokenPayloadSchema(BaseModel):
     exp: int
 
 
+class AccessTokenPayloadSchema(BaseModel):
+    sub: str
+    email: EmailStr
+
+
 class RefreshTokenPayloadSchema(BaseModel):
     sub: str
     jti: str

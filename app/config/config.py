@@ -29,6 +29,7 @@ class Settings(BaseSettings):
         return (
             f"mongodb://{self.mongo_username}:{self.mongo_password}"
             f"@{self.mongo_host}:{self.mongo_port}/{self.mongo_db}"
+            f"?authSource=admin"
         )
 
 

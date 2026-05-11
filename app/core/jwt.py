@@ -3,14 +3,24 @@ from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 
 from app.config.config import settings
-from app.schemas.auth_schema import RefreshTokenPayloadSchema, TokenPayloadSchema
+from app.schemas.auth_schema import (
+    AccessTokenPayloadSchema,
+    RefreshTokenPayloadSchema,
+    TokenPayloadSchema,
+)
 
 
-def create_access_token(payload: dict, expires_minutes: int | None = None) -> str:
+def create_access_token(
+    payload: AccessTokenPayloadSchema | dict,
+    expires_minutes: int | None = None,
+) -> str:
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=expires_minutes or settings.access_token_expire_minutes
     )
-    to_encode = payload.copy()
+    if isinstance(payload, AccessTokenPayloadSchema):
+        to_encode = payload.model_dump()
+    else:
+        to_encode = payload.copy()
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 

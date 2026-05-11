@@ -30,6 +30,8 @@ def get_auth_service(
     return AuthService(user_service)
 
 
+
+
 def get_period_repository(
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> PeriodRepository:
