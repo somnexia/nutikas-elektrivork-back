@@ -3,7 +3,7 @@ from typing import Any
 from bson import ObjectId
 
 from app.repositories.base_repository import BaseRepository
-from app.schemas.user_schema import UserReadSchema
+from app.schemas.user_schema import UserReadSchema, UserUnsafeReadSchema
 
 
 class UserRepository(BaseRepository):
@@ -29,11 +29,17 @@ class UserRepository(BaseRepository):
 			return None
 		return UserReadSchema.model_validate(self._serialize_id(user))
 
-	async def get_by_email(self, email: str) -> UserReadSchema | None:
+	async def get_by_email(self, email: str) -> UserUnsafeReadSchema | None:
 		user = await self.collection.find_one({"email": email})
 		if not user:
 			return None
-		return UserReadSchema.model_validate(self._serialize_id(user))
+		return UserUnsafeReadSchema.model_validate(self._serialize_id(user))
+
+	async def get_by_username(self, username: str) -> UserUnsafeReadSchema | None:
+		user = await self.collection.find_one({"username": username})
+		if not user:
+			return None
+		return UserUnsafeReadSchema.model_validate(self._serialize_id(user))
 
 	async def list_users(self, limit: int = 50, offset: int = 0) -> list[UserReadSchema]:
 		cursor = self.collection.find().skip(offset).limit(limit)

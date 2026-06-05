@@ -1,0 +1,42 @@
+services:
+  # Сервис FastAPI
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # Переопределяем хост, чтобы внутри сети Docker приложение видело базу
+      - mongo_host=mongodb
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  # Сервис MongoDB
+  mongodb:
+    image: mongo:7.0
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${mongo_username}
+      MONGO_INITDB_ROOT_PASSWORD: ${mongo_password}
+    volumes:
+      - mongo_prod_data:/data/db
+    networks:
+      - app-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongo_prod_data:
+networks:
+  app-network:
+    driver: bridge

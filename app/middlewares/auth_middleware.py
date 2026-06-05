@@ -16,7 +16,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app, open_paths: list[str] | None = None):
         super().__init__(app)
-        self.open_paths = open_paths or ["/auth/register"]
+        self.open_paths = open_paths or ["/auth/register", "/auth/refresh", "/auth/login"]
         self.open_prefixes = ["/docs", "/openapi.json"]
 
         logger.info("AuthMiddleware initialized")

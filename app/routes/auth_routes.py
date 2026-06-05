@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request, Response
 
 from app.dependencies import get_auth_service
 from app.schemas.auth_schema import AccessTokenResponseSchema, RegisterResponseSchema
-from app.schemas.user_schema import UserCreateSchema
+from app.schemas.user_schema import UserCreateSchema, UserLoginSchema
 from app.services.auth_service import AuthService
 
 
@@ -16,6 +16,14 @@ async def register(
     auth_service: AuthService = Depends(get_auth_service),
 ) -> RegisterResponseSchema:
     return await auth_service.sign_up(payload, response)
+
+@router.post("/login", response_model=AccessTokenResponseSchema)
+async def login(
+    payload: UserLoginSchema,
+    response: Response,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> AccessTokenResponseSchema:
+    return await auth_service.login(payload, response)
 
 
 @router.post("/refresh", response_model=AccessTokenResponseSchema)

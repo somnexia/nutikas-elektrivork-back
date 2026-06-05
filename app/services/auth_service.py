@@ -4,19 +4,22 @@ from fastapi import HTTPException, Request, Response, status
 
 from app.config.config import settings
 from app.core.csrf import generate_csrf_token, is_csrf_valid
+from app.core.security import verify_password
 from app.core.jwt import create_access_token, create_refresh_token, decode_refresh_token
 from app.schemas.auth_schema import (
 	AccessTokenPayloadSchema,
 	AccessTokenResponseSchema,
 	RegisterResponseSchema,
 )
-from app.schemas.user_schema import UserCreateSchema
+from app.schemas.user_schema import UserCreateSchema, UserLoginSchema
 from app.services.user_service import UserService
+from app.repositories.user_repository import UserRepository
 
 
 class AuthService:
-	def __init__(self, user_service: UserService):
+	def __init__(self, user_service: UserService, user_repository: UserRepository):
 		self._user_service = user_service
+		self._user_repository = user_repository
 
 	async def sign_up(
 		self, payload: UserCreateSchema, response: Response
@@ -25,6 +28,37 @@ class AuthService:
 		csrf_token = generate_csrf_token()
 		self._set_auth_cookies(response, result.access_token, refresh_token, csrf_token)
 		return result
+	
+
+	async def login(
+			self,
+			UserLoginSchema: UserLoginSchema,
+			response: Response
+	) -> AccessTokenResponseSchema:
+		user = None
+		if UserLoginSchema.email:
+			user = await self._user_service.get_by_email(UserLoginSchema.email)
+		elif UserLoginSchema.username:
+			user = await self._user_repository.get_by_username(UserLoginSchema.username)
+		if not user:
+			raise HTTPException(
+				status_code=status.HTTP_401_UNAUTHORIZED,
+				detail="Invalid credentials",
+			)
+		if not verify_password(UserLoginSchema.password, user.password_hash):
+			raise HTTPException(
+				status_code=status.HTTP_401_UNAUTHORIZED,
+				detail="Invalid credentials",
+			)
+		access_token = create_access_token(
+			AccessTokenPayloadSchema(sub=user.id, email=user.email)
+		)
+		refresh_token = await self._issue_refresh_token(user.id)
+		csrf_token = generate_csrf_token()
+		self._set_auth_cookies(response, access_token, refresh_token, csrf_token)
+		return AccessTokenResponseSchema(access_token=access_token)
+		
+
 
 	async def refresh_session(
 		self, request: Request, response: Response
